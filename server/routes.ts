@@ -156,84 +156,84 @@ class Routes {
 
   //video routes
 
-  @Router.post("/video")
+  @Router.post("/video/:data")
   async createVideo(session: SessionDoc, data: Array<number>, description: string) {
     return undefined;
   }
 
-  @Router.post("/video")
+  @Router.post("/video/:id")
   async watchVideo(session: SessionDoc, id: string) {
     return undefined;
   }
 
-  @Router.post("/video")
+  @Router.post("/video/:id")
   async deleteVideo(session: SessionDoc, id: string) {
     return undefined;
   }
 
   //organization routes
 
-  @Router.post("/organizations")
+  @Router.post("/organizations/:name")
   async createOrg(session: SessionDoc, name: string) {
     return undefined;
   }
 
-  @Router.post("/organizations")
+  @Router.post("/organizations/:name")
   async deleteOrg(session: SessionDoc, name: string) {
     return undefined;
   }
 
-  @Router.post("/organizations")
+  @Router.post("/organizations/:name")
   async updateOrgName(session: SessionDoc, name: string) {
     return undefined;
   }
 
-  @Router.post("/organizations")
+  @Router.post("/organizations/:description")
   async updateOrgDescription(session: SessionDoc, description: string) {
     return undefined;
   }
 
-  @Router.post("/organizations")
+  @Router.post("/organizations/:member")
   async addMember(session: SessionDoc, member: string) {
     return undefined;
   }
 
-  @Router.post("/organizations")
+  @Router.post("/organizations/:member")
   async deleteMember(session: SessionDoc, member: string) {
     return undefined;
   }
 
-  @Router.post("/organizations")
+  @Router.post("/organizations/:name")
   async makePublic(session: SessionDoc, name: string) {
     return undefined;
   }
 
-  @Router.post("/organizations")
+  @Router.post("/organizations/:name")
   async makePrivate(session: SessionDoc, name: string) {
     return undefined;
   }
 
   //map routes
 
-  @Router.post("/map")
+  @Router.post("/map/:x")
   async scrollMap(session: SessionDoc, x: number, y: number) { 
     //x and y are how far the user has scrolled from their previous location on the map
     return undefined;
   }
 
-  @Router.post("/map")
+  @Router.post("/map/:x")
   async dropPins(session: SessionDoc, x: Array<number>, y: Array<number>) { 
     //x and y are the location of the pins to drop
     return undefined;
   }
 
-  @Router.post("/map")
+  @Router.post("/map/:x")
   async tapPin(session: SessionDoc, x: number, y: number) { 
     //x and y are location of pin
     return undefined;
   }
 
-  @Router.post("/map")
+  @Router.post("/map/:x")
   async untapPin(session: SessionDoc, x: number, y: number) { 
     //x and y are location of pin
     return undefined;
@@ -241,7 +241,7 @@ class Routes {
 
   //event routes
 
-  @Router.post("/event")
+  @Router.post("/event/:name")
   async createEvent(session: SessionDoc, name: string, time: Date, location: string, choreographers: Set<string>,
     genres: Set<string>, props: Set<string>, price: number, description: string, attendees: Set<string>) {
     const user = Sessioning.getUser(session);
@@ -255,79 +255,79 @@ class Routes {
     return await Events.deleteEvent(eventOid)
   }
 
-  @Router.post("/event")
+  @Router.post("/event/:name")
   async updateEventName(event: EventDoc, name: string) {
     const eventOid = await Events.getEvent(event);
     return await Events.updateName(eventOid, name)
   }
 
-  @Router.post("/event")
+  @Router.post("/event/:time")
   async updateEventTime(event: EventDoc, time: Date) {
     const eventOid = await Events.getEvent(event);
     return await Events.updateTime(eventOid, time)
   }
 
-  @Router.post("/event")
+  @Router.post("/event/:location")
   async updateEventLocation(event: EventDoc, location: string) {
     const eventOid = await Events.getEvent(event);
     return await Events.updateLocation(eventOid, location)
   }
 
-  @Router.post("/event")
+  @Router.post("/event/:price")
   async updateEventPrice(event: EventDoc, price: number) {
     const eventOid = await Events.getEvent(event);
     return await Events.updatePrice(eventOid, price)
   }
 
-  @Router.post("/event")
+  @Router.post("/event/:description")
   async updateEventDescription(event: EventDoc, description: string) {
     const eventOid = await Events.getEvent(event);
     return await Events.updateDescription(eventOid, description)
   }
 
-  @Router.post("/event")
+  @Router.post("/event/:choreog")
   async addChoreog(event: EventDoc, choreog: string) {
     const eventOid = await Events.getEvent(event);
     return await Events.addChoreog(eventOid, choreog)
   }
 
-  @Router.post("/event")
+  @Router.post("/event/:choreog")
   async deleteChoreog(event: EventDoc, choreog: string) {
     const eventOid = await Events.getEvent(event);
     return await Events.deleteChoreog(eventOid, choreog)
   }
 
-  @Router.post("/event")
+  @Router.post("/even/:genre")
   async addGenre(event: EventDoc, genre: string) {
     const eventOid = await Events.getEvent(event);
     return await Events.addGenre(eventOid, genre)
   }
 
-  @Router.post("/event")
+  @Router.post("/event/:genre")
   async deleteGenre(event: EventDoc, genre: string) {
     const eventOid = await Events.getEvent(event);
     return await Events.deleteGenre(eventOid, genre)
   }
 
-  @Router.post("/event")
+  @Router.post("/event/:prop")
   async addProp(event: EventDoc, prop: string) {
     const eventOid = await Events.getEvent(event);
     return await Events.addProp(eventOid, prop)
   }
 
-  @Router.post("/event")
+  @Router.post("/event/:prop")
   async deleteProp(event: EventDoc, prop: string) {
     const eventOid = await Events.getEvent(event);
     return await Events.deleteProp(eventOid, prop)
   }
 
-  @Router.post("/event")
+  @Router.post("/event/:attendee")
   async addAttendee(event: EventDoc, attendee: string) {
     const eventOid = await Events.getEvent(event);
     return await Events.addAttendee(eventOid, attendee)
   }
 
-  @Router.post("/event")
+  @Router.post("/event/:attendee")
   async deleteAttendee(event: EventDoc, attendee: string) {
     const eventOid = await Events.getEvent(event);
     return await Events.deleteAttendee(eventOid, attendee)
