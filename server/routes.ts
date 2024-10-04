@@ -2,9 +2,10 @@ import { ObjectId } from "mongodb";
 
 import { Router, getExpressRouter } from "./framework/router";
 
-import { Authing, Friending, Posting, Sessioning } from "./app";
+import { Authing, Friending, Posting, Sessioning, Inviting, Events } from "./app";
 import { PostOptions } from "./concepts/posting";
 import { SessionDoc } from "./concepts/sessioning";
+import { EventDoc } from "./concepts/events";
 import Responses from "./responses";
 
 import { z } from "zod";
@@ -152,6 +153,220 @@ class Routes {
     const fromOid = (await Authing.getUserByUsername(from))._id;
     return await Friending.rejectRequest(fromOid, user);
   }
+
+  //video routes
+
+  @Router.post("/video")
+  async createVideo(session: SessionDoc, data: Array<number>, description: string) {
+    return undefined;
+  }
+
+  @Router.post("/video")
+  async watchVideo(session: SessionDoc, id: string) {
+    return undefined;
+  }
+
+  @Router.post("/video")
+  async deleteVideo(session: SessionDoc, id: string) {
+    return undefined;
+  }
+
+  //organization routes
+
+  @Router.post("/organizations")
+  async createOrg(session: SessionDoc, name: string) {
+    return undefined;
+  }
+
+  @Router.post("/organizations")
+  async deleteOrg(session: SessionDoc, name: string) {
+    return undefined;
+  }
+
+  @Router.post("/organizations")
+  async updateOrgName(session: SessionDoc, name: string) {
+    return undefined;
+  }
+
+  @Router.post("/organizations")
+  async updateOrgDescription(session: SessionDoc, description: string) {
+    return undefined;
+  }
+
+  @Router.post("/organizations")
+  async addMember(session: SessionDoc, member: string) {
+    return undefined;
+  }
+
+  @Router.post("/organizations")
+  async deleteMember(session: SessionDoc, member: string) {
+    return undefined;
+  }
+
+  @Router.post("/organizations")
+  async makePublic(session: SessionDoc, name: string) {
+    return undefined;
+  }
+
+  @Router.post("/organizations")
+  async makePrivate(session: SessionDoc, name: string) {
+    return undefined;
+  }
+
+  //map routes
+
+  @Router.post("/map")
+  async scrollMap(session: SessionDoc, x: number, y: number) { 
+    //x and y are how far the user has scrolled from their previous location on the map
+    return undefined;
+  }
+
+  @Router.post("/map")
+  async dropPins(session: SessionDoc, x: Array<number>, y: Array<number>) { 
+    //x and y are the location of the pins to drop
+    return undefined;
+  }
+
+  @Router.post("/map")
+  async tapPin(session: SessionDoc, x: number, y: number) { 
+    //x and y are location of pin
+    return undefined;
+  }
+
+  @Router.post("/map")
+  async untapPin(session: SessionDoc, x: number, y: number) { 
+    //x and y are location of pin
+    return undefined;
+  }
+
+  //event routes
+
+  @Router.post("/event")
+  async createEvent(session: SessionDoc, name: string, time: Date, location: string, choreographers: Set<string>,
+    genres: Set<string>, props: Set<string>, price: number, description: string, attendees: Set<string>) {
+    const user = Sessioning.getUser(session);
+    return await Events.createEvent(user, name, time, location, choreographers,
+      genres, props, price, description, attendees);
+  }
+
+  @Router.post("/event")
+  async deleteEvent(event: EventDoc) {
+    const eventOid = await Events.getEvent(event);
+    return await Events.deleteEvent(eventOid)
+  }
+
+  @Router.post("/event")
+  async updateEventName(event: EventDoc, name: string) {
+    const eventOid = await Events.getEvent(event);
+    return await Events.updateName(eventOid, name)
+  }
+
+  @Router.post("/event")
+  async updateEventTime(event: EventDoc, time: Date) {
+    const eventOid = await Events.getEvent(event);
+    return await Events.updateTime(eventOid, time)
+  }
+
+  @Router.post("/event")
+  async updateEventLocation(event: EventDoc, location: string) {
+    const eventOid = await Events.getEvent(event);
+    return await Events.updateLocation(eventOid, location)
+  }
+
+  @Router.post("/event")
+  async updateEventPrice(event: EventDoc, price: number) {
+    const eventOid = await Events.getEvent(event);
+    return await Events.updatePrice(eventOid, price)
+  }
+
+  @Router.post("/event")
+  async updateEventDescription(event: EventDoc, description: string) {
+    const eventOid = await Events.getEvent(event);
+    return await Events.updateDescription(eventOid, description)
+  }
+
+  @Router.post("/event")
+  async addChoreog(event: EventDoc, choreog: string) {
+    const eventOid = await Events.getEvent(event);
+    return await Events.addChoreog(eventOid, choreog)
+  }
+
+  @Router.post("/event")
+  async deleteChoreog(event: EventDoc, choreog: string) {
+    const eventOid = await Events.getEvent(event);
+    return await Events.deleteChoreog(eventOid, choreog)
+  }
+
+  @Router.post("/event")
+  async addGenre(event: EventDoc, genre: string) {
+    const eventOid = await Events.getEvent(event);
+    return await Events.addGenre(eventOid, genre)
+  }
+
+  @Router.post("/event")
+  async deleteGenre(event: EventDoc, genre: string) {
+    const eventOid = await Events.getEvent(event);
+    return await Events.deleteGenre(eventOid, genre)
+  }
+
+  @Router.post("/event")
+  async addProp(event: EventDoc, prop: string) {
+    const eventOid = await Events.getEvent(event);
+    return await Events.addProp(eventOid, prop)
+  }
+
+  @Router.post("/event")
+  async deleteProp(event: EventDoc, prop: string) {
+    const eventOid = await Events.getEvent(event);
+    return await Events.deleteProp(eventOid, prop)
+  }
+
+  @Router.post("/event")
+  async addAttendee(event: EventDoc, attendee: string) {
+    const eventOid = await Events.getEvent(event);
+    return await Events.addAttendee(eventOid, attendee)
+  }
+
+  @Router.post("/event")
+  async deleteAttendee(event: EventDoc, attendee: string) {
+    const eventOid = await Events.getEvent(event);
+    return await Events.deleteAttendee(eventOid, attendee)
+  }
+
+  //invite routes
+
+  @Router.post("/invite/:to")
+  async sendInvite(session: SessionDoc, to: string, event: EventDoc) {
+    const user = Sessioning.getUser(session);
+    const toOid = (await Authing.getUserByUsername(to))._id;
+    const eventOid = await Events.getEvent(event);
+    return await Inviting.sendInvite(eventOid, user, toOid);
+  }
+
+  @Router.delete("/invite/:to")
+  async removeInvite(session: SessionDoc, to: string, event: EventDoc) {
+    const user = Sessioning.getUser(session);
+    const toOid = (await Authing.getUserByUsername(to))._id;
+    const eventOid = await Events.getEvent(event);
+    return await Inviting.removeInvite(eventOid, user, toOid);
+  }
+
+  @Router.put("/invite/accept/:from")
+  async acceptInvite(session: SessionDoc, from: string, event: EventDoc) {
+    const user = Sessioning.getUser(session);
+    const fromOid = (await Authing.getUserByUsername(from))._id;
+    const eventOid = await Events.getEvent(event);
+    return await Inviting.acceptInvite(eventOid, user, fromOid);
+  }
+
+  @Router.put("/invite/reject/:from")
+  async rejectInvite(session: SessionDoc, from: string, event: EventDoc) {
+    const user = Sessioning.getUser(session);
+    const fromOid = (await Authing.getUserByUsername(from))._id;
+    const eventOid = await Events.getEvent(event);
+    return await Inviting.rejectInvite(eventOid, user, fromOid);
+  }
+
 }
 
 /** The web app. */
