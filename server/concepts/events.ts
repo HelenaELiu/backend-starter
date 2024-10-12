@@ -7,7 +7,7 @@ export interface EventDoc extends BaseDoc {
   name: string;
   time: string;
   location: string;
-  price: string;
+  price: number;
   description: string;
   choreographers: string[];
   genres: string[];
@@ -28,7 +28,7 @@ export default class EventConcept {
     this.events = new DocCollection<EventDoc>(collectionName);
   }
 
-  async createEvent(author: ObjectId, name: string, time: string, location: string, price: string, 
+  async createEvent(author: ObjectId, name: string, time: string, location: string, price: number, 
     description: string) {
     let choreographers: string[] = [];
     let genres: string[] = [];
@@ -56,7 +56,7 @@ export default class EventConcept {
     return await this.events.readMany({}, { sort: { _id: -1 } });
   }
 
-  async update(_id: ObjectId, name?: string, time?: string, location?: string, price?: string, description?: string) {
+  async updateEvent(_id: ObjectId, name?: string, time?: string, location?: string, price?: number, description?: string) {
     await this.events.partialUpdateOne({ _id }, { name, time, location, price, description });
     return { msg: "Event successfully updated!" };
   }

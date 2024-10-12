@@ -203,11 +203,11 @@ class Routes {
   }
 
   @Router.patch("/organizations/:id")
-  async update(session: SessionDoc, id: string, name?: string, description?: string) {
+  async updateOrg(session: SessionDoc, id: string, name?: string, description?: string) {
     const user = Sessioning.getUser(session);
     const oid = new ObjectId(id);
     await Organizations.assertAuthorIsUser(oid, user);
-    return await Organizations.update(oid, name, description);
+    return await Organizations.updateOrg(oid, name, description);
   }
 
   @Router.get("/organizations/:id")
@@ -289,7 +289,7 @@ class Routes {
   //events routes
 
   @Router.post("/events")
-  async createEvent(session: SessionDoc, name: string, time: string, location: string, price: string, description: string) {
+  async createEvent(session: SessionDoc, name: string, time: string, location: string, price: number, description: string) {
     const user = Sessioning.getUser(session);
     return await Events.createEvent(user, name, time, location, price, description);
   }
@@ -314,11 +314,11 @@ class Routes {
   }
 
   @Router.patch("/events/:id")
-  async updateEvent(session: SessionDoc, id: string, name?: string, time?: string, location?: string, price?: string, description?: string) {
+  async updateEvent(session: SessionDoc, id: string, name?: string, time?: string, location?: string, price?: number, description?: string) {
     const user = Sessioning.getUser(session);
     const oid = new ObjectId(id);
     await Events.assertAuthorIsUser(oid, user);
-    return await Events.update(oid, name, time, location, price, description);
+    return await Events.updateEvent(oid, name, time, location, price, description);
   }
 
   @Router.patch("/events/addchoreog/:id")
@@ -423,8 +423,9 @@ class Routes {
   }
 
   @Router.get("/invite")
-  async getAllInvites() {
-    return await Inviting.getAllInvites();
+  async getInvites(session: SessionDoc) {
+    const user = Sessioning.getUser(session);
+    return await Inviting.getInvites(user);
   }
 
 }

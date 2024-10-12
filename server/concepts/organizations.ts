@@ -42,7 +42,7 @@ export default class OrganizationConcept {
     return await this.organizations.readMany({}, { sort: { _id: -1 } });
   }
 
-  async update(_id: ObjectId, name?: string, description?: string) {
+  async updateOrg(_id: ObjectId, name?: string, description?: string) {
     await this.organizations.partialUpdateOne({ _id }, { name, description });
     return { msg: "Organization successfully updated!" };
   }

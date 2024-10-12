@@ -183,7 +183,7 @@ const operations: Operation[] = [
     fields: { from: "input", event_id: "input" },
   },
   {
-    name: "Get All Invites",
+    name: "Get Invites",
     endpoint: "/api/invite",
     method: "GET",
     fields: {},

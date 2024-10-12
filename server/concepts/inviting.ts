@@ -22,12 +22,6 @@ export default class InvitingConcept {
     this.invites = new DocCollection<InviteDoc>(collectionName);
   }
 
-  async getInvites(user: ObjectId) {
-    return await this.invites.readMany({
-      $or: [{ from: user }, { to: user }],
-    });
-  }
-
   async sendInvite(event: ObjectId, from: ObjectId, to: ObjectId) {
     await this.canSendInvite(event, from, to);
     await this.invites.createOne({ event, from, to, status: "pending" });
@@ -51,16 +45,18 @@ export default class InvitingConcept {
     return { msg: "Removed invite!" };
   }
 
+  async getInvites(user: ObjectId) {
+    return await this.invites.readMany({
+      $or: [{ from: user }, { to: user }],
+    });
+  }
+
   private async removePendingInvite(event: ObjectId, from: ObjectId, to: ObjectId) {
     const invite = await this.invites.popOne({ event, from, to, status: "pending" });
     if (invite === null) {
       throw new Error("Invite does not exist!");
     }
     return invite;
-  }
-
-  async getAllInvites() {
-    return await this.invites.readMany({}, { sort: { _id: -1 } });
   }
 
   private async canSendInvite(event: ObjectId, u1: ObjectId, u2: ObjectId) {
