@@ -5,14 +5,14 @@ import { BadValuesError, NotAllowedError, NotFoundError } from "./errors";
 export interface EventDoc extends BaseDoc {
   author: ObjectId,
   name: string;
-  time: Date;
+  time: string;
   location: string;
-  choreographers: Set<string>;
-  genres: Set<string>;
-  props: Set<string>;
-  price: number;
+  price: string;
   description: string;
-  attendees: Set<string>; //set of usernames, rather than the users themselves
+  choreographers: string[];
+  genres: string[];
+  props: string[];
+  attendees: string[]; //array of usernames
 }
 
 /**
@@ -28,12 +28,15 @@ export default class EventConcept {
     this.events = new DocCollection<EventDoc>(collectionName);
   }
 
-  async createEvent(author: ObjectId, name: string, time: Date, location: string, choreographers: Set<string>,
-    genres: Set<string>, props: Set<string>, price: number, description: string, attendees: Set<string>) {
-    const _id = await this.events.createOne({author, name, time, location, choreographers, genres,
-      props, price, description, attendees
-    });
-    return { msg: "Event created successfully!", user: await this.events.readOne({ _id }) };
+  async createEvent(author: ObjectId, name: string, time: string, location: string, price: string, 
+    description: string) {
+    let choreographers: string[] = [];
+    let genres: string[] = [];
+    let props: string[] = [];
+    let attendees: string[] = [];
+    const _id = await this.events.createOne({author, name, time, location, price, description, 
+      choreographers, genres, props, attendees});
+    return { msg: "Event created successfully!", event: await this.events.readOne({ _id }) };
   }
 
   async deleteEvent(_id: ObjectId) {
@@ -41,38 +44,31 @@ export default class EventConcept {
     return { msg: "Event deleted successfully!" };
   }
 
-  async getEvent(event: EventDoc) {
-    return new ObjectId(event.name);
+  async getEvent(_id: ObjectId) {
+    const event = await this.events.readOne({ _id });
+    if (event === null) {
+      throw new NotFoundError(`Event not found!`);
+    }
+    return event;
   }
 
-  async updateName(_id: ObjectId, name: string) {
-    await this.events.partialUpdateOne({ _id }, { name });
-    return { msg: "Event name successfully updated!" };
+  async getAllEvents() {
+    return await this.events.readMany({}, { sort: { _id: -1 } });
   }
 
-  async updateTime(_id: ObjectId, time: Date) {
-    await this.events.partialUpdateOne({ _id }, { time });
-    return { msg: "Event time successfully updated!" };
-  }
-
-  async updateLocation(_id: ObjectId, location: string) {
-    await this.events.partialUpdateOne({ _id }, { location });
-    return { msg: "Event location successfully updated!" };
-  }
-
-  async updatePrice(_id: ObjectId, price: number) {
-    await this.events.partialUpdateOne({ _id }, { price });
-    return { msg: "Event price successfully updated!" };
-  }
-
-  async updateDescription(_id: ObjectId, description: string) {
-    await this.events.partialUpdateOne({ _id }, { description });
-    return { msg: "Event description successfully updated!" };
+  async update(_id: ObjectId, name?: string, time?: string, location?: string, price?: string, description?: string) {
+    await this.events.partialUpdateOne({ _id }, { name, time, location, price, description });
+    return { msg: "Event successfully updated!" };
   }
 
   async addChoreog(_id: ObjectId, choreog: string) {
     let event = await this.events.readOne({ _id });
-    event?.choreographers.add(choreog)
+    let choreographers = event?.choreographers;
+
+    if (choreographers !== undefined && !choreographers.includes(choreog)) {
+      choreographers.push(choreog);
+      await this.events.partialUpdateOne({ _id }, { choreographers });
+    }
     return { msg: "Event choreog successfully added!" };
   }
 
@@ -80,8 +76,10 @@ export default class EventConcept {
     let event = await this.events.readOne({ _id });
     let choreographers = event?.choreographers;
 
-    if (choreographers !== undefined && choreog in choreographers) {
-      event?.choreographers.delete(choreog)
+    if (choreographers !== undefined && choreographers.includes(choreog)) {
+      const index = choreographers.indexOf(choreog, 0);
+      choreographers.splice(index, 1);
+      await this.events.partialUpdateOne({ _id }, { choreographers });
       return { msg: "Event choreog successfully deleted!" };
     } else {
       throw new Error('Choreographer not in choreographers list!');
@@ -90,7 +88,12 @@ export default class EventConcept {
 
   async addGenre(_id: ObjectId, genre: string) {
     let event = await this.events.readOne({ _id });
-    event?.genres.add(genre)
+    let genres = event?.genres;
+
+    if (genres !== undefined && !genres.includes(genre)) {
+      genres.push(genre);
+      await this.events.partialUpdateOne({ _id }, { genres });
+    }
     return { msg: "Event genre successfully added!" };
   }
 
@@ -98,8 +101,10 @@ export default class EventConcept {
     let event = await this.events.readOne({ _id });
     let genres = event?.genres;
 
-    if (genres !== undefined && genre in genres) {
-      event?.genres.delete(genre)
+    if (genres !== undefined && genres.includes(genre)) {
+      const index = genres.indexOf(genre, 0);
+      genres.splice(index, 1);
+      await this.events.partialUpdateOne({ _id }, { genres });
       return { msg: "Event genre successfully deleted!" };
     } else {
       throw new Error('Genre not in genres list!');
@@ -108,7 +113,12 @@ export default class EventConcept {
 
   async addProp(_id: ObjectId, prop: string) {
     let event = await this.events.readOne({ _id });
-    event?.props.add(prop)
+    let props = event?.props;
+
+    if (props !== undefined && !props.includes(prop)) {
+      props.push(prop);
+      await this.events.partialUpdateOne({ _id }, { props });
+    }
     return { msg: "Event prop successfully added!" };
   }
 
@@ -116,8 +126,10 @@ export default class EventConcept {
     let event = await this.events.readOne({ _id });
     let props = event?.props;
 
-    if (props !== undefined && prop in props) {
-      event?.props.delete(prop)
+    if (props !== undefined && props.includes(prop)) {
+      const index = props.indexOf(prop, 0);
+      props.splice(index, 1);
+      await this.events.partialUpdateOne({ _id }, { props });
       return { msg: "Event prop successfully deleted!" };
     } else {
       throw new Error('Prop not in props list!');
@@ -126,21 +138,64 @@ export default class EventConcept {
 
   async addAttendee(_id: ObjectId, attendee: string) {
     let event = await this.events.readOne({ _id });
-    event?.attendees.add(attendee)
-    return { msg: "Event prop successfully added!" };
+    let attendees = event?.attendees;
+
+    if (attendees !== undefined && !attendees.includes(attendee)) {
+      attendees.push(attendee);
+      await this.events.partialUpdateOne({ _id }, { attendees });
+    }
+    return { msg: "Event attendee successfully added!" };
   }
 
   async deleteAttendee(_id: ObjectId, attendee: string) {
     let event = await this.events.readOne({ _id });
     let attendees = event?.attendees;
 
-    if (attendees !== undefined && attendee in attendees) {
-      event?.attendees.delete(attendee)
+    if (attendees !== undefined && attendees.includes(attendee)) {
+      const index = attendees.indexOf(attendee, 0);
+      attendees.splice(index, 1);
+      await this.events.partialUpdateOne({ _id }, { attendees });
       return { msg: "Event attendee successfully deleted!" };
     } else {
       throw new Error('Attendee not in attendee list!');
     }
   }
 
-  
+  async assertUserNotAttendee(_id: ObjectId, user: ObjectId) {
+    const event = await this.events.readOne({ _id });
+    if (!event) {
+      throw new NotFoundError(`Event ${_id} does not exist!`);
+    }
+    if (event.attendees.includes(user.toString())) {
+      throw new AlreadyEventAttendeeError(user, _id);
+    }
+  }
+
+  async assertAuthorIsUser(_id: ObjectId, user: ObjectId) {
+    const event = await this.events.readOne({ _id });
+    if (!event) {
+      throw new NotFoundError(`Event ${_id} does not exist!`);
+    }
+    if (event.author.toString() !== user.toString()) {
+      throw new EventAuthorNotMatchError(user, _id);
+    }
+  }
+}
+
+export class EventAuthorNotMatchError extends NotAllowedError {
+  constructor(
+    public readonly author: ObjectId,
+    public readonly _id: ObjectId,
+  ) {
+    super("{0} is not the author of event {1}!", author, _id);
+  }
+}
+
+export class AlreadyEventAttendeeError extends NotAllowedError {
+  constructor(
+    public readonly author: ObjectId,
+    public readonly _id: ObjectId,
+  ) {
+    super("{0} is already attending event {1}!", author, _id);
+  }
 }

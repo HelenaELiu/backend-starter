@@ -59,6 +59,10 @@ export default class InvitingConcept {
     return invite;
   }
 
+  async getAllInvites() {
+    return await this.invites.readMany({}, { sort: { _id: -1 } });
+  }
+
   private async canSendInvite(event: ObjectId, u1: ObjectId, u2: ObjectId) {
     // check if there is pending invite between these users
     const invite = await this.invites.readOne({
@@ -68,7 +72,7 @@ export default class InvitingConcept {
       status: "pending",
     });
     if (invite !== null) {
-      throw new Error("invite already exists!")
+      throw new Error("Invite already exists!");
     }
   }
 }

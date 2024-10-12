@@ -2,10 +2,9 @@ import { ObjectId } from "mongodb";
 
 import { Router, getExpressRouter } from "./framework/router";
 
-import { Authing, Friending, Posting, Sessioning, Inviting, Events } from "./app";
+import { Authing, Friending, Posting, Sessioning, Inviting, Events, Organizations, Videos, Map } from "./app";
 import { PostOptions } from "./concepts/posting";
 import { SessionDoc } from "./concepts/sessioning";
-import { EventDoc } from "./concepts/events";
 import Responses from "./responses";
 
 import { z } from "zod";
@@ -15,6 +14,8 @@ import { z } from "zod";
  */
 class Routes {
   // Synchronize the concepts from `app.ts`.
+
+  //sessioning + authing routes
 
   @Router.get("/session")
   async getSessionUser(session: SessionDoc) {
@@ -71,6 +72,8 @@ class Routes {
     return { msg: "Logged out!" };
   }
 
+  //post routes
+
   @Router.get("/posts")
   @Router.validate(z.object({ author: z.string().optional() }))
   async getPosts(author?: string) {
@@ -106,6 +109,8 @@ class Routes {
     await Posting.assertAuthorIsUser(oid, user);
     return Posting.delete(oid);
   }
+
+  //friend routes
 
   @Router.get("/friends")
   async getFriends(session: SessionDoc) {
@@ -154,217 +159,272 @@ class Routes {
     return await Friending.rejectRequest(fromOid, user);
   }
 
-  //video routes
+  //videos routes
 
-  @Router.post("/video/:data")
-  async createVideo(session: SessionDoc, data: Array<number>, description: string) {
-    return undefined;
+  @Router.post("/videos")
+  async createVideo(session: SessionDoc, url: string, description: string) {
+    const user = Sessioning.getUser(session);
+    return await Videos.createVideo(user, url, description);
   }
 
-  @Router.post("/video/:id")
-  async watchVideo(session: SessionDoc, id: string) {
-    return undefined;
+  @Router.get("/videos/:id")
+  async getVideo(id: string) {
+    const oid = new ObjectId(id);
+    return await Videos.getVideo(oid);
   }
 
-  @Router.post("/video/:id")
+  @Router.get("/videos")
+  async getAllVideos() {
+    return await Videos.getAllVideos();
+  }
+
+  @Router.delete("/videos/:id")
   async deleteVideo(session: SessionDoc, id: string) {
-    return undefined;
+    const user = Sessioning.getUser(session);
+    const oid = new ObjectId(id);
+    await Videos.assertAuthorIsUser(oid, user);
+    return await Videos.deleteVideo(oid);
   }
 
-  //organization routes
+  //organizations routes
 
-  @Router.post("/organizations/:name")
-  async createOrg(session: SessionDoc, name: string) {
-    return undefined;
+  @Router.post("/organizations")
+  async createOrg(session: SessionDoc, name: string, description: string, privacy: boolean) {
+    const user = Sessioning.getUser(session);
+    return await Organizations.createOrg(user, name, description, privacy);
   }
 
-  @Router.post("/organizations/:name")
-  async deleteOrg(session: SessionDoc, name: string) {
-    return undefined;
+  @Router.delete("/organizations/:id")
+  async deleteOrg(session: SessionDoc, id: string) {
+    const user = Sessioning.getUser(session);
+    const oid = new ObjectId(id);
+    await Organizations.assertAuthorIsUser(oid, user);
+    return await Organizations.deleteOrg(oid);
   }
 
-  @Router.post("/organizations/:name")
-  async updateOrgName(session: SessionDoc, name: string) {
-    return undefined;
+  @Router.patch("/organizations/:id")
+  async update(session: SessionDoc, id: string, name?: string, description?: string) {
+    const user = Sessioning.getUser(session);
+    const oid = new ObjectId(id);
+    await Organizations.assertAuthorIsUser(oid, user);
+    return await Organizations.update(oid, name, description);
   }
 
-  @Router.post("/organizations/:description")
-  async updateOrgDescription(session: SessionDoc, description: string) {
-    return undefined;
+  @Router.get("/organizations/:id")
+  async getOrg(id: string) {
+    const oid = new ObjectId(id);
+    return await Organizations.getOrg(oid);
   }
 
-  @Router.post("/organizations/:member")
-  async addMember(session: SessionDoc, member: string) {
-    return undefined;
+  @Router.get("/organizations")
+  async getAllOrgs() {
+    return await Organizations.getAllOrgs();
   }
 
-  @Router.post("/organizations/:member")
-  async deleteMember(session: SessionDoc, member: string) {
-    return undefined;
+  @Router.patch("/organizations/addmember/:id")
+  async addMember(session: SessionDoc, id: string, member: string) {
+    const user = Sessioning.getUser(session);
+    const oid = new ObjectId(id);
+    await Organizations.assertAuthorIsUser(oid, user);
+    return await Organizations.addMember(oid, member);
   }
 
-  @Router.post("/organizations/:name")
-  async makePublic(session: SessionDoc, name: string) {
-    return undefined;
+  @Router.patch("/organizations/deletemember/:id")
+  async deleteMember(session: SessionDoc, id: string, member: string) {
+    const user = Sessioning.getUser(session);
+    const oid = new ObjectId(id);
+    await Organizations.assertAuthorIsUser(oid, user);
+    return await Organizations.deleteMember(oid, member);
   }
 
-  @Router.post("/organizations/:name")
-  async makePrivate(session: SessionDoc, name: string) {
-    return undefined;
+  @Router.patch("/organizations/makepublic/:id")
+  async makePublic(session: SessionDoc, id: string) {
+    const user = Sessioning.getUser(session);
+    const oid = new ObjectId(id);
+    await Organizations.assertAuthorIsUser(oid, user);
+    return await Organizations.makePublic(oid);
+  }
+
+  @Router.patch("/organizations/makeprivate/:id")
+  async makePrivate(session: SessionDoc, id: string) {
+    const user = Sessioning.getUser(session);
+    const oid = new ObjectId(id);
+    await Organizations.assertAuthorIsUser(oid, user);
+    return await Organizations.makePrivate(oid);
   }
 
   //map routes
 
-  @Router.post("/map/:x")
-  async scrollMap(session: SessionDoc, x: number, y: number) { 
+  @Router.post("/map")
+  async createMap() { 
+    return await Map.createMap();
+  }
+
+  @Router.get("/map")
+  async getMap(id: string) { 
+    const oid = new ObjectId(id);
+    return await Map.getMap(oid);
+  }
+
+  @Router.patch("/map")
+  async scrollMap(id: string, x_scroll: number, y_scroll: number) { 
     //x and y are how far the user has scrolled from their previous location on the map
-    return undefined;
+    const oid = new ObjectId(id);
+    return await Map.scroll(oid, x_scroll, y_scroll);
   }
 
-  @Router.post("/map/:x")
-  async dropPins(session: SessionDoc, x: Array<number>, y: Array<number>) { 
-    //x and y are the location of the pins to drop
-    return undefined;
+  @Router.post("/map/pins")
+  async makePin(event_id: string, x: number, y: number) { 
+    //x and y is the location of the pin to drop, event is the corresponding event
+    const eventOid = new ObjectId(event_id);
+    return await Map.makePin(eventOid, x, y);
   }
 
-  @Router.post("/map/:x")
-  async tapPin(session: SessionDoc, x: number, y: number) { 
-    //x and y are location of pin
-    return undefined;
+  @Router.get("/map/pins/:id")
+  async getPinEventId(pin_id: string) { 
+    const pinOid = new ObjectId(pin_id);
+    return await Map.getPinEventId(pinOid);    
   }
 
-  @Router.post("/map/:x")
-  async untapPin(session: SessionDoc, x: number, y: number) { 
-    //x and y are location of pin
-    return undefined;
-  }
+  //events routes
 
-  //event routes
-
-  @Router.post("/event/:name")
-  async createEvent(session: SessionDoc, name: string, time: Date, location: string, choreographers: Set<string>,
-    genres: Set<string>, props: Set<string>, price: number, description: string, attendees: Set<string>) {
+  @Router.post("/events")
+  async createEvent(session: SessionDoc, name: string, time: string, location: string, price: string, description: string) {
     const user = Sessioning.getUser(session);
-    return await Events.createEvent(user, name, time, location, choreographers,
-      genres, props, price, description, attendees);
+    return await Events.createEvent(user, name, time, location, price, description);
   }
 
-  @Router.post("/event")
-  async deleteEvent(event: EventDoc) {
-    const eventOid = await Events.getEvent(event);
-    return await Events.deleteEvent(eventOid)
+  @Router.delete("/events/:id")
+  async deleteEvent(session: SessionDoc, id: string) {
+    const user = Sessioning.getUser(session);
+    const oid = new ObjectId(id);
+    await Events.assertAuthorIsUser(oid, user);
+    return await Events.deleteEvent(oid);
   }
 
-  @Router.post("/event/:name")
-  async updateEventName(event: EventDoc, name: string) {
-    const eventOid = await Events.getEvent(event);
-    return await Events.updateName(eventOid, name)
+  @Router.get("/events/:id")
+  async getEvent(id: string) {
+    const eventOid = new ObjectId(id);
+    return await Events.getEvent(eventOid);
   }
 
-  @Router.post("/event/:time")
-  async updateEventTime(event: EventDoc, time: Date) {
-    const eventOid = await Events.getEvent(event);
-    return await Events.updateTime(eventOid, time)
+  @Router.get("/events")
+  async getAllEvents() {
+    return await Events.getAllEvents();
   }
 
-  @Router.post("/event/:location")
-  async updateEventLocation(event: EventDoc, location: string) {
-    const eventOid = await Events.getEvent(event);
-    return await Events.updateLocation(eventOid, location)
+  @Router.patch("/events/:id")
+  async updateEvent(session: SessionDoc, id: string, name?: string, time?: string, location?: string, price?: string, description?: string) {
+    const user = Sessioning.getUser(session);
+    const oid = new ObjectId(id);
+    await Events.assertAuthorIsUser(oid, user);
+    return await Events.update(oid, name, time, location, price, description);
   }
 
-  @Router.post("/event/:price")
-  async updateEventPrice(event: EventDoc, price: number) {
-    const eventOid = await Events.getEvent(event);
-    return await Events.updatePrice(eventOid, price)
+  @Router.patch("/events/addchoreog/:id")
+  async addChoreog(session: SessionDoc, id: string, choreog: string) {
+    const user = Sessioning.getUser(session);
+    const oid = new ObjectId(id);
+    await Events.assertAuthorIsUser(oid, user);
+    return await Events.addChoreog(oid, choreog);
   }
 
-  @Router.post("/event/:description")
-  async updateEventDescription(event: EventDoc, description: string) {
-    const eventOid = await Events.getEvent(event);
-    return await Events.updateDescription(eventOid, description)
+  @Router.patch("/events/deletechoreog/:id")
+  async deleteChoreog(session: SessionDoc, id: string, choreog: string) {
+    const user = Sessioning.getUser(session);
+    const oid = new ObjectId(id);
+    await Events.assertAuthorIsUser(oid, user);
+    return await Events.deleteChoreog(oid, choreog);
   }
 
-  @Router.post("/event/:choreog")
-  async addChoreog(event: EventDoc, choreog: string) {
-    const eventOid = await Events.getEvent(event);
-    return await Events.addChoreog(eventOid, choreog)
+  @Router.patch("/events/addgenre/:id")
+  async addGenre(session: SessionDoc, id: string, genre: string) {
+    const user = Sessioning.getUser(session);
+    const oid = new ObjectId(id);
+    await Events.assertAuthorIsUser(oid, user);
+    return await Events.addGenre(oid, genre);
   }
 
-  @Router.post("/event/:choreog")
-  async deleteChoreog(event: EventDoc, choreog: string) {
-    const eventOid = await Events.getEvent(event);
-    return await Events.deleteChoreog(eventOid, choreog)
+  @Router.patch("/events/deletegenre/:id")
+  async deleteGenre(session: SessionDoc, id: string, genre: string) {
+    const user = Sessioning.getUser(session);
+    const oid = new ObjectId(id);
+    await Events.assertAuthorIsUser(oid, user);
+    return await Events.deleteGenre(oid, genre);
   }
 
-  @Router.post("/even/:genre")
-  async addGenre(event: EventDoc, genre: string) {
-    const eventOid = await Events.getEvent(event);
-    return await Events.addGenre(eventOid, genre)
+  @Router.patch("/events/addprop/:id")
+  async addProp(session: SessionDoc, id: string, prop: string) {
+    const user = Sessioning.getUser(session);
+    const oid = new ObjectId(id);
+    await Events.assertAuthorIsUser(oid, user);
+    return await Events.addProp(oid, prop);
   }
 
-  @Router.post("/event/:genre")
-  async deleteGenre(event: EventDoc, genre: string) {
-    const eventOid = await Events.getEvent(event);
-    return await Events.deleteGenre(eventOid, genre)
+  @Router.patch("/events/deleteprop/:id")
+  async deleteProp(session: SessionDoc, id: string, prop: string) {
+    const user = Sessioning.getUser(session);
+    const oid = new ObjectId(id);
+    await Events.assertAuthorIsUser(oid, user);
+    return await Events.deleteProp(oid, prop);
   }
 
-  @Router.post("/event/:prop")
-  async addProp(event: EventDoc, prop: string) {
-    const eventOid = await Events.getEvent(event);
-    return await Events.addProp(eventOid, prop)
+  @Router.patch("/events/addattendee/:id")
+  async addAttendee(session: SessionDoc, id: string, attendee: string) {
+    const user = Sessioning.getUser(session);
+    const oid = new ObjectId(id);
+    await Events.assertAuthorIsUser(oid, user);
+    return await Events.addAttendee(oid, attendee);
   }
 
-  @Router.post("/event/:prop")
-  async deleteProp(event: EventDoc, prop: string) {
-    const eventOid = await Events.getEvent(event);
-    return await Events.deleteProp(eventOid, prop)
-  }
-
-  @Router.post("/event/:attendee")
-  async addAttendee(event: EventDoc, attendee: string) {
-    const eventOid = await Events.getEvent(event);
-    return await Events.addAttendee(eventOid, attendee)
-  }
-
-  @Router.post("/event/:attendee")
-  async deleteAttendee(event: EventDoc, attendee: string) {
-    const eventOid = await Events.getEvent(event);
-    return await Events.deleteAttendee(eventOid, attendee)
+  @Router.patch("/events/deleteattendee/:id")
+  async deleteAttendee(session: SessionDoc, id: string, attendee: string) {
+    const user = Sessioning.getUser(session);
+    const oid = new ObjectId(id);
+    await Events.assertAuthorIsUser(oid, user);
+    return await Events.deleteAttendee(oid, attendee);
   }
 
   //invite routes
 
   @Router.post("/invite/:to")
-  async sendInvite(session: SessionDoc, to: string, event: EventDoc) {
+  async sendInvite(session: SessionDoc, to: string, event_id: string) {
     const user = Sessioning.getUser(session);
     const toOid = (await Authing.getUserByUsername(to))._id;
-    const eventOid = await Events.getEvent(event);
+    const eventOid = new ObjectId(event_id);
+    await Events.assertUserNotAttendee(eventOid, toOid);
     return await Inviting.sendInvite(eventOid, user, toOid);
   }
 
   @Router.delete("/invite/:to")
-  async removeInvite(session: SessionDoc, to: string, event: EventDoc) {
+  async removeInvite(session: SessionDoc, to: string, event_id: string) {
     const user = Sessioning.getUser(session);
     const toOid = (await Authing.getUserByUsername(to))._id;
-    const eventOid = await Events.getEvent(event);
+    const eventOid = new ObjectId(event_id);
     return await Inviting.removeInvite(eventOid, user, toOid);
   }
 
   @Router.put("/invite/accept/:from")
-  async acceptInvite(session: SessionDoc, from: string, event: EventDoc) {
+  async acceptInvite(session: SessionDoc, from: string, event_id: string) {
     const user = Sessioning.getUser(session);
     const fromOid = (await Authing.getUserByUsername(from))._id;
-    const eventOid = await Events.getEvent(event);
-    return await Inviting.acceptInvite(eventOid, user, fromOid);
+    const eventOid = new ObjectId(event_id);
+    const msg = await Inviting.acceptInvite(eventOid, fromOid, user);
+    await Events.addAttendee(eventOid, user.toString());
+    return msg;
   }
 
   @Router.put("/invite/reject/:from")
-  async rejectInvite(session: SessionDoc, from: string, event: EventDoc) {
+  async rejectInvite(session: SessionDoc, from: string, event_id: string) {
     const user = Sessioning.getUser(session);
     const fromOid = (await Authing.getUserByUsername(from))._id;
-    const eventOid = await Events.getEvent(event);
-    return await Inviting.rejectInvite(eventOid, user, fromOid);
+    const eventOid = new ObjectId(event_id);
+    return await Inviting.rejectInvite(eventOid, fromOid, user);
+  }
+
+  @Router.get("/invite")
+  async getAllInvites() {
+    return await Inviting.getAllInvites();
   }
 
 }
